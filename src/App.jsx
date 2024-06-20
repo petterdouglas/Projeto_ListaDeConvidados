@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { initializeApp } from 'firebase/app'
+import { collection, getFirestore, getDocs, setDoc, doc, deleteDoc } from 'firebase/firestore'
 
 // Styles
 import './App.css'
@@ -8,9 +10,15 @@ import Guest from './components/Guest'
 import GuestForm from './components/GuestForm'
 import Search from './components/Search'
 
-const url = "http://localhost:3000/guests"
+//configuração Firebase
+const firebaseApp = initializeApp({
+  apiKey: "AIzaSyD5ArDrbOly_6BGhBXRR7pHkKvt4TxoeqU",
+  authDomain: "lista-de-convidados-cd20e.firebaseapp.com",
+  projectId: "lista-de-convidados-cd20e",
+})
 
 function App() {
+
   const [guests, setGuests] = useState([])
 
   const [search, setSearch] = useState({
@@ -18,12 +26,14 @@ function App() {
     type: ""
   })
 
+  const db = getFirestore(firebaseApp)
+  const useCollectionRef = collection(db, "guests-list")
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch(url)
-        const data = await res.json()
-        localStorage.setItem('guests', JSON.stringify(data))
+        const data = await getDocs(useCollectionRef)
+        localStorage.setItem('guests', JSON.stringify(data.docs.map((guest) => ({ ...guest.data(), id: guest.id }))))
         const storageGuests = localStorage.getItem('guests')
         setGuests(JSON.parse(storageGuests))
       } catch (error) {
@@ -36,39 +46,27 @@ function App() {
     }
     fetchData()
   }, [])
-
-
-  async function update(newGuest) {
-    try {
-      await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(newGuest)
-      })
-    } catch (error) {
-      console.log("Erro ao realizar update", error)
-    }
-  }
-
-  const addGuest = (guest, invitedFor) => {
+  const addGuest = async (guest, invitedFor) => {
     const newGuest = {
-      id: `${Math.floor(Math.random() * 1000)}`,
+      id: `${Math.floor(Math.random() * 1000)}`, // Gera um ID único (você pode usar outra estratégia para gerar IDs únicos)
       guest: guest,
       invitedFor: invitedFor,
       hasArrived: false
     }
-    const updateGuests = [...guests, newGuest]
-    setGuests(updateGuests)
-    update(newGuest)
+
+    try {
+      await setDoc(doc(db, "guests-list", newGuest.id), newGuest);
+      setGuests([...guests, newGuest]);
+      localStorage.setItem('guests', JSON.stringify([...guests, newGuest]));
+    } catch (error) {
+      console.error("Erro ao adicionar convidado:", error);
+    }
   }
 
   const removeGuest = async (id) => {
     try {
-      await fetch(`${url}/${id}`, {
-        method: 'DELETE'
-      })
+
+      await deleteDoc(doc(db, "guests-list", id))
 
       const filteredGuests = guests.filter(guest => guest.id !== id)
       setGuests(filteredGuests)
@@ -79,29 +77,26 @@ function App() {
   };
 
   const checkGuest = async (id) => {
+    const updatedGuests = guests.map((guest) =>
+      guest.id === id ? { ...guest, hasArrived: !guest.hasArrived } : guest
+    )
+    setGuests(updatedGuests)
+    localStorage.setItem('guests', JSON.stringify([...guests, updatedGuests]));
+
     try {
-      const updatedGuests = guests.map((guest) =>
-        guest.id === id ? { ...guest, hasArrived: !guest.hasArrived } : guest
-      )
-      setGuests(updatedGuests)
-      
-      await fetch(`${url}/${id}`, {
-        method: 'DELETE'
-      })
-
-      const data = updatedGuests.filter((guest) => guest.id === id)
-      console.log(data)
-      
-      await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data[0])
-      })
-
+      await deleteDoc(doc(db, "guests-list", id))
+      const filteredGuests = guests.filter(guest => guest.id !== id)
     } catch (error) {
-      console.error('Erro ao deletar convidado')
+      console.error('Erro ao deletar convidado:', error)
+    }
+
+    const data = updatedGuests.filter((guest) => guest.id === id)
+    console.log(data)
+
+    try {
+      await setDoc(doc(db, "guests-list", updatedGuests.id), updatedGuests);
+    } catch (error) {
+      console.error("Erro ao adicionar convidado:", error);
     }
   };
 
