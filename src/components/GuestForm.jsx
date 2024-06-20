@@ -28,8 +28,6 @@ const GuestForm = ({ guests, addGuest }) => {
         return <div><input type="text" placeholder="Insira a pessoa que convidou..." onChange={(e) => setCustomInvitedfor(e.target.value)} value={customInvitedFor} /></div>
     }
 
-    const oi = "23"
-
     return (
         <div className="guest-form">
             <h2>Adicionar Convidado:</h2>
