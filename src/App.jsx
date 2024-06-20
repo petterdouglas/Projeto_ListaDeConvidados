@@ -81,20 +81,18 @@ function App() {
       guest.id === id ? { ...guest, hasArrived: !guest.hasArrived } : guest
     )
     setGuests(updatedGuests)
-    localStorage.setItem('guests', JSON.stringify([...guests, updatedGuests]));
+    localStorage.setItem('guests', JSON.stringify([updatedGuests]));
 
     try {
       await deleteDoc(doc(db, "guests-list", id))
-      const filteredGuests = guests.filter(guest => guest.id !== id)
     } catch (error) {
       console.error('Erro ao deletar convidado:', error)
     }
 
     const data = updatedGuests.filter((guest) => guest.id === id)
-    console.log(data)
-
+    console.log(data[0])
     try {
-      await setDoc(doc(db, "guests-list", updatedGuests.id), updatedGuests);
+      await setDoc(doc(db, "guests-list", data[0].id), data[0]);
     } catch (error) {
       console.error("Erro ao adicionar convidado:", error);
     }
