@@ -5,20 +5,15 @@
   box-sizing: border-box;
 }
 
-html {
-  height: 100%;
+body {
+  min-height: 100vh;
   background-image: url('./img/bg.jpg');
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
-}
-
-body {
-  padding: 50px 30px;
-  width: auto;
   font-family: Arial, sans-serif;
   color: #333;
-  margin: 0;
+  padding: 50px 30px;
 }
 
 .app {
@@ -26,7 +21,7 @@ body {
   margin: 0 auto;
   background-color: #efefef;
   border-radius: 20px;
-  padding: 20px 30px;
+  padding: 30px;
 }
 
 .search_section {
