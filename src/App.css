@@ -9,8 +9,8 @@ body {
   min-height: 100vh;
   background-image: url('./img/bg.jpg');
   background-position: center;
-  background-size: cover;
-  background-repeat: no-repeat;
+  background-size: auto;
+  background-repeat: repeat;
   font-family: Arial, sans-serif;
   color: #333;
   padding: 50px 30px;
